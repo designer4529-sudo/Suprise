@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To My Real Life Hero | Papa</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@200;400;600&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* =========================================
+           1. CORE ARCHITECTURE & DESIGN TOKENS
+           =========================================
+        */
+        :root {
+            --gold: #d4af37;
+            --dark-gold: #996515;
+            --bg-black: #050505;
+            --text-light: #f0f0f0;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border-glass: rgba(212, 175, 55, 0.2);
+            --font-main: 'Montserrat', sans-serif;
+            --font-title: 'Cinzel', serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-black);
+            color: var(--text-light);
+            font-family: var(--font-main);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* =========================================
+           2. CINEMATIC PRE-LOADER (The "Hook")
+           =========================================
+        */
+        #preloader {
+            position: fixed;
+            inset: 0;
+            background: black;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loader-content {
+            text-align: center;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        #typewriter {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            min-height: 2.5rem;
+            letter-spacing: 2px;
+            color: var(--gold);
+        }
+
+        .enter-btn {
+            margin-top: 40px;
+            padding: 12px 35px;
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.5s ease;
+            font-family: var(--font-main);
+        }
+
+        .enter-btn:hover {
+            background: var(--gold);
+            color: black;
+            box-shadow: 0 0 25px var(--gold);
+        }
+
+        /* =========================================
+           3. PARTICLE ENGINE BACKGROUND
+           =========================================
+        */
+        #particle-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            z-index: -1;
+            filter: blur(1px);
+        }
+
+        /* =========================================
+           4. LAYOUT & TYPOGRAPHY
+           =========================================
+        */
+        .cinematic-container {
+            width: 100%;
+            display: none; /* Revealed after load */
+        }
+
+        section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 5vh 10%;
+            position: relative;
+        }
+
+        .title-reveal {
+            font-family: var(--font-title);
+            font-size: clamp(3rem, 8vw, 6rem);
+            text-align: center;
+            background: linear-gradient(180deg, #fff 0%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
+        }
+
+        /* Story Cards */
+        .message-card {
+            background: var(--glass);
+            border: 1px solid var(--border-glass);
+            backdrop-filter: blur(15px);
+            padding: 60px;
+            border-radius: 4px;
+            max-width: 800px;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .message-card h2 {
+            font-family: var(--font-title);
+            color: var(--gold);
+            margin-bottom: 25px;
+            font-size: 2.2rem;
+        }
+
+        .message-card p {
+            font-size: 1.1rem;
+            line-height: 1.9;
+            color: #ccc;
+            margin-bottom: 20px;
+            font-weight: 200;
+        }
+
+        .highlight-phrase {
+            font-size: 2rem;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: var(--gold);
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        /* =========================================
+           5. DECORATIVE ELEMENTS
+           =========================================
+        */
+        .floating-photo {
+            width: 300px;
+            height: 400px;
+            object-fit: cover;
+            border: 8px solid white;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+            transform: rotate(-3deg);
+            margin: 20px;
+        }
+
+        .final-hero-text {
+            font-size: 4rem;
+            text-align: center;
+            text-shadow: 0 0 20px var(--gold);
+        }
+
+        .surprise-btn {
+            background: var(--gold);
+            color: black;
+            padding: 20px 50px;
+            border: none;
+            font-family: var(--font-title);
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-top: 50px;
+            border-radius: 50px;
+            transition: transform 0.3s;
+        }
+
+        .surprise-btn:hover { transform: scale(1.1); }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .message-card { padding: 30px; }
+            .title-reveal { font-size: 2.5rem; }
+            .final-hero-text { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-audio" loop>
+        <source src="https://www.bensound.com/bensound-music/bensound-memories.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="preloader">
+        <div class="loader-content">
+            <div id="typewriter"></div>
+            <button class="enter-btn" id="enter-btn" onclick="ignite()">Open My Heart</button>
+        </div>
+    </div>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="cinematic-container" id="main-ui">
+        
+        <section id="sec-1">
+            <h1 class="title-reveal" id="main-title">Happy Birthday,<br>Papa</h1>
+        </section>
+
+        <section id="sec-2">
+            <div class="message-card" id="card-1">
+                <h2>The Silent Sacrifice</h2>
+                <p>They say heroes wear capes, but I’ve seen them in your tired eyes after a long day of work. I’ve seen them in the way you put our needs before yours, every single time.</p>
+                <p>Thank you for the silent protection, the invisible sacrifices, and the unwavering strength that held our family together.</p>
+            </div>
+        </section>
+
+        <section id="sec-3">
+            <div class="highlight-phrase" id="pride-text">
+                "I am proud to be your child."
+            </div>
+            <img src="https://img.sanishtech.com/u/784b50f24c0e6f25a0202b6ca45abb8f.jpg" class="floating-photo" id="photo-1">
+        </section>
+
+        <section id="sec-4">
+            <div class="message-card" id="card-2" style="border-right: 1px solid var(--gold); border-left: none;">
+                <h2 style="text-align: right;">My Life's Compass</h2>
+                <p style="text-align: right;">In a world that is often loud and confusing, your voice has been my steady guide. You didn't tell me how to live; you lived, and let me watch you do it.</p>
+                <p style="text-align: right;">Every lesson I’ve learned about kindness, integrity, and hard work... I learned from you.</p>
+            </div>
+        </section>
+
+        <section id="sec-5">
+            <h2 class="title-reveal final-hero-text">You Are My Real Life Hero, Papa.</h2>
+            <button class="surprise-btn" onclick="revealPopup()">ONE MORE MESSAGE FOR YOU</button>
+        </section>
+
+    </div>
+
+    <script>
+        /* =========================================
+           6. JAVASCRIPT ENGINE (LOGIC & ANIMATION)
+           =========================================
+        */
+
+        // 6.1 Particle System Implementation
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 0.5;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX;
+                if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(212, 175, 55, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function handleParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+            requestAnimationFrame(handleParticles);
+        }
+
+        // 6.2 Typewriter Logic
+        const lines = [
+            "Some heroes don’t wear capes...",
+            "They wear the scars of hard work.",
+            "They provide a roof and a future.",
+            "I call my hero... Papa."
+        ];
+        let lineIdx = 0;
+        let charIdx = 0;
+        const typeEl = document.getElementById('typewriter');
+
+        function typeEffect() {
+            if (charIdx < lines[lineIdx].length) {
+                typeEl.textContent += lines[lineIdx].charAt(charIdx);
+                charIdx++;
+                setTimeout(typeEffect, 70);
+            } else {
+                setTimeout(eraseEffect, 2000);
+            }
+        }
+
+        function eraseEffect() {
+            if (lineIdx < lines.length - 1) {
+                if (typeEl.textContent.length > 0) {
+                    typeEl.textContent = typeEl.textContent.slice(0, -1);
+                    setTimeout(eraseEffect, 30);
+                } else {
+                    lineIdx++;
+                    charIdx = 0;
+                    setTimeout(typeEffect, 500);
+                }
+            } else {
+                gsap.to("#enter-btn", { opacity: 1, y: -10, duration: 1 });
+            }
+        }
+
+        // 6.3 Ignite the Experience
+        function ignite() {
+            const audio = document.getElementById('bg-audio');
+            audio.volume = 0.4;
+            audio.play();
+
+            gsap.to("#preloader", {
+                opacity: 0,
+                duration: 2,
+                display: "none",
+                onComplete: () => {
+                    document.getElementById('main-ui').style.display = "block";
+                    startScrollAnimations();
+                    burstConfetti();
+                }
+            });
+        }
+
+        // 6.4 GSAP Scroll Orchestration
+        gsap.registerPlugin(ScrollTrigger);
+
+        function startScrollAnimations() {
+            // Title Animation
+            gsap.from("#main-title", {
+                opacity: 0, scale: 0.8, filter: "blur(20px)", duration: 2.5
+            });
+
+            // Card Animations
+            gsap.from("#card-1", {
+                scrollTrigger: { trigger: "#sec-2", start: "top center" },
+                x: -100, opacity: 0, duration: 1.5
+            });
+
+            gsap.from("#photo-1", {
+                scrollTrigger: { trigger: "#sec-3", start: "top center" },
+                rotation: 15, scale: 0.5, opacity: 0, duration: 2
+            });
+
+            gsap.from("#card-2", {
+                scrollTrigger: { trigger: "#sec-4", start: "top center" },
+                x: 100, opacity: 0, duration: 1.5
+            });
+        }
+
+        // 6.5 Climax Effects
+        function burstConfetti() {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#d4af37', '#ffffff', '#aa8a2e']
+            });
+        }
+
+        function revealPopup() {
+            // Custom SweetAlert or Native UI
+            const overlay = document.createElement('div');
+            overlay.style = "position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:10000; display:flex; justify-content:center; align-items:center; padding:20px;";
+            overlay.innerHTML = `
+                <div style="text-align:center; max-width:500px;">
+                    <h1 style="color:var(--gold); font-family:var(--font-title); margin-bottom:20px;">I love you, Papa.</h1>
+                    <p style="font-size:1.2rem; line-height:1.6;">I may not say it every day, and I might not be the perfect child... but you are, and always will be, the man I admire most in this world.</p>
+                    <button onclick="this.parentElement.parentElement.remove()" style="margin-top:30px; background:white; padding:10px 20px; border:none; cursor:pointer;">Close with Love</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            burstConfetti();
+        }
+
+        // Initialize
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        for (let i = 0; i < 150; i++) particles.push(new Particle());
+        handleParticles();
+        typeEffect();
+
+    </script>
+</body>
+</html>
